@@ -1,55 +1,59 @@
-import Blog from '../models/Blog';
+import Blog from '../models/Blog.js';
 import axios from 'axios';
 // import OpenAi from 'openai';
 
 export const createBlog = async (req, res) => {
   const { topic, author } = req.body;
+  console.log('Request Body:', req.body);
   // call the openAI API
   try {
     const response = await axios.post('https://api.openai.com/v1/chat/completions', {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-      },
-      model: 'gpt-4o-mini',
-      messages: [
-        {
-          'role': 'system',
-          'content': [
-            {
-              'type': 'text',
-              'text': 'Be concise but insightful. Assume user already knows the basics',
-            }
-          ]
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            'role': 'system',
+            'content': [
+              {
+                'type': 'text',
+                'text': 'Be concise and to the point but insightful. Assume user already knows the basics',
+              }
+            ]
+          },
+          {
+            'role':'user',
+            'content': [
+              {
+                'type': 'text',
+                'text': `Write a very short blog about ${topic}. Limit to 300 tokens`
+              }
+            ]
+          },
+        ],
+        temperature: 1,
+        max_tokens: 500,
+        top_p: 1,
+        frequency_penalty: 0,
+        presence_penalty: 0,
+        response_format: {
+          'type': 'text',
         },
-        {
-          'role':'user',
-          'content': [
-            {
-              'type': 'text',
-              'text': `Write a very short blog about ${topic}. Limit to 300 tokens`
-            }
-          ]
-        },
-      ],
-      temperature: 1,
-      max_tokens: 500,
-      top_p: 1,
-      frequency_penalty: 0,
-      presence_penalty: 0,
-      response_format: {
-        'type': 'text',
       },
-    });
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        }
+      }
+    );
 
-    console.log('response.data', response.data);
+    console.log('response.data: ', response.data.choices[0].message);
     const newBlog = new Blog({
       title: topic,
-      content: response.data,
+      content: response.data.choices[0].message.content,
       author: author,
     });
 
-    // await newBlog.save();
+    await newBlog.save();
     res.status(201).json(newBlog);
   } catch (err) {
     console.error(err);
