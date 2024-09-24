@@ -12,8 +12,8 @@ const PORT = process.env.PORT || 3000;
 // Connect to MongoDB
 connectDB();
 
-// For dev purposes, enable all origins & avoid cors errors
-app.use(cors());
+// For dev purposes, enable all origins & avoid cors errors. Fow now using Vite proxy making this middleware unnecessary
+// app.use(cors());
 // Middleware to parse incoming requests with JSON
 app.use(express.json());
 
