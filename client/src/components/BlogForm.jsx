@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
-const BlogForm = ({ onCreate }) => {
+export default function BlogForm ({ onCreate }) {
   const [form, setForm] = useState({ topic: '', author: ''});
 
   const handleSubmit = async (e) => {
@@ -33,5 +33,3 @@ const BlogForm = ({ onCreate }) => {
     </form>
   )
 }
-
-export default BlogForm;
