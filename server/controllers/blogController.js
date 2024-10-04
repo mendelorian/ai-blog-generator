@@ -63,7 +63,7 @@ export const createBlog = async (req, res) => {
 
 export const getAllBlogs = async (req, res) => {
   try {
-    const blogs = await Blog.find();
+    const blogs = await Blog.find().sort({ createdAt: -1 });
     res.status(200).json(blogs);
   } catch (err) {
     res.status(500).json({message: 'Error fetching blogs', err})
