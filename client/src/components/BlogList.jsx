@@ -1,18 +1,23 @@
 import PropTypes from 'prop-types';
 import ReactMarkdown from 'react-markdown';
+// import '../styles/markdown.css';
+import '../styles/BlogList.css';
 
 export default function BlogList ({ blogs }) {
   return (
     <div>
       <h2>Generated Blogs</h2>
-      <ul>
+      <ul className="blog-list">
         {blogs.map((blog) =>
-          <li key={blog._id}>
-            <h3>{blog.title}</h3>
-            <p>
-              <strong>Created At:</strong> {new Date(blog.createdAt).toLocaleString()}</p>
-            <ReactMarkdown>{blog.content}</ReactMarkdown>
-            <p><strong>Author:</strong> {blog.author}</p>
+          <li key={blog._id} className="blog-list-item">
+            <h3 className="blog-title"><strong>Topic:</strong> {blog.title}</h3>
+            <p className="blog-metadata">
+              <strong>Author:</strong> {blog.author} |{' '}
+              <strong>Created At:</strong> {new Date(blog.createdAt).toLocaleString()}
+            </p>
+            <div className="blog-content">
+              <ReactMarkdown className="markdown-content">{blog.content}</ReactMarkdown>
+            </div>
           </li>
         )}
       </ul>
