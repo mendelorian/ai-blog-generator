@@ -1,6 +1,5 @@
 import PropTypes from 'prop-types';
 import ReactMarkdown from 'react-markdown';
-// import '../styles/markdown.css';
 import '../styles/BlogList.css';
 
 export default function BlogList ({ blogs }) {
@@ -16,7 +15,7 @@ export default function BlogList ({ blogs }) {
               <strong>Created At:</strong> {new Date(blog.createdAt).toLocaleString()}
             </p>
             <div className="blog-content">
-              <ReactMarkdown className="markdown-content">{blog.content}</ReactMarkdown>
+              <ReactMarkdown>{blog.content}</ReactMarkdown>
             </div>
           </li>
         )}

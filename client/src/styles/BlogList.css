@@ -42,3 +42,15 @@
     --content-background: #f9f9f9;
   }
 }
+
+.light {
+  --divider-color: #e0e0e0;
+  --metadata-color: #666666;
+  --content-background: #f9f9f9;
+}
+
+.dark {
+  --divider-color: #444444;
+  --metadata-color: #bbbbbb;
+  --content-background: #333333;
+}
