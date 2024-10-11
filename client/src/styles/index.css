@@ -30,7 +30,6 @@
   --link-color: #646cff;
   --link-hover-color: #747bff;
   --theme-button-color: #f9f9f9;
-  /* --theme-button-color: lightgray; */
 }
 
 /* Manual dark mode theme */
@@ -93,4 +92,8 @@ button:focus-visible {
   /* height: 50px; */
   /* width: 50px; */
   font-size: x-large;
+}
+
+.theme-switcher:focus {
+  outline: none;
 }
