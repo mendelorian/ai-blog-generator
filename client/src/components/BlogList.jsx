@@ -5,7 +5,6 @@ import '../styles/BlogList.css';
 export default function BlogList ({ blogs }) {
   return (
     <div>
-      <h2>Generated Blogs</h2>
       <ul className="blog-list">
         {blogs.map((blog) =>
           <li key={blog._id} className="blog-list-item">

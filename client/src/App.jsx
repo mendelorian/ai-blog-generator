@@ -5,12 +5,15 @@ import { FaSun, FaMoon, FaDesktop } from 'react-icons/fa';
 
 function App() {
   const [blogs, setBlogs] = useState([]);
-  const [error, setError] = useState([]);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [theme, setTheme] = useState(() => {
     const savedTheme = localStorage.getItem('theme');
     return savedTheme || 'system';
   })
+  const [sortBy, setSortBy] = useState('desc');
 
+  // Get dark or light theme from local storage if it exists
   useEffect(() => {
     const root = document.documentElement;
 
@@ -29,19 +32,34 @@ function App() {
     localStorage.setItem('theme', theme);
   }, [theme])
 
-  useEffect(() => {
-    const fetchBlogs = async () => {
-      try {
-        const response = await fetch('/api/blogs');
-        const data = await response.json();
-        setBlogs(data);
-      } catch (err) {
-        console.error('Error fetching blogs: ', err);
-      }
-    };
+  const fetchBlogs = async (sort = 'desc') => {
+    setLoading(true);
+    setError(null);
 
+    try {
+      const response = await fetch(`/api/blogs/?sort=${sort}`);
+      if (!response.ok) {
+        throw new Error('Server response not ok. ');
+      }
+      const data = await response.json();
+      setBlogs(data);
+    } catch (err) {
+      console.error('Error fetching blogs: ', err);
+      setError('Unable to get blogs list. Please try agian later.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Get the initial list of blogs from the DB
+  useEffect(() => {
     fetchBlogs();
   }, []);
+
+  // Update list sorted on server side when sort order changes
+  useEffect(() => {
+    fetchBlogs(sortBy);
+  }, [sortBy]);
 
   const handleCreateBlog = async (form) => {
     try {
@@ -85,12 +103,25 @@ function App() {
   return (
     <div>
       <h1>AI Blog Generator</h1>
-      <button className='theme-switcher' onClick={toggleTheme} title={setThemeTitle()} aria-label="Toggle color theme">
+      <button className="theme-switcher" onClick={toggleTheme} title={setThemeTitle()} aria-label="Toggle color theme">
         {getThemeIcon()}
       </button>
       {error && <p style={{color: 'red'}}>{error}</p>}
       <BlogForm onCreate={handleCreateBlog} />
-      <BlogList blogs={blogs} />
+      <h2>Generated Blogs</h2>
+      <select onChange={(e) => setSortBy(e.target.value)}>
+        <option value="desc">Newest First</option>
+        <option value="asc">Oldest First</option>
+      </select>
+      { loading ? (
+        <>
+          <div className="loading-indicator"></div>
+          <div className="centered">Loading...</div>
+        </>
+        ) : (
+          <BlogList blogs={blogs} />
+        )}
+
     </div>
   )
 }
