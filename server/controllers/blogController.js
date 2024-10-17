@@ -63,14 +63,14 @@ export const createBlog = async (req, res) => {
 
 export const getAllBlogs = async (req, res) => {
   try {
-    const { sort } = req.query;
+    const { sort = 'createdAt', order = 'desc' } = req.query;
 
     // validate sort fields to prevent injection attacks
-    const sortOrders = ['desc', 'asc'];
-    const sortBy = sortOrders.includes(sort) ? sort : 'desc';
-    const sortOrder = sortBy === 'desc' ? -1 : 1;
+    const sortFields = ['createdAt', 'author', 'title'];
+    const sortBy = sortFields.includes(sort) ? sort : 'createdAt';
+    const sortOrder = order === 'asc' ? 1 : -1;
 
-    const blogs = await Blog.find().sort({ createdAt: sortOrder });
+    const blogs = await Blog.find().sort({ [sortBy]: sortOrder });
     res.status(200).json(blogs);
   } catch (err) {
     res.status(500).json({message: 'Error fetching blogs', err});

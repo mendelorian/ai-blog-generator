@@ -117,3 +117,7 @@ button:focus-visible {
   display: flex;
   justify-content: center;
 }
+
+.dropdown:focus {
+  outline:none;
+}

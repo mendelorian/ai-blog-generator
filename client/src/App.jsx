@@ -12,6 +12,7 @@ function App() {
     return savedTheme || 'system';
   })
   const [sortBy, setSortBy] = useState('desc');
+  const [sortOrder, setSortOrder] = useState('createdAt');
 
   // Get dark or light theme from local storage if it exists
   useEffect(() => {
@@ -32,12 +33,12 @@ function App() {
     localStorage.setItem('theme', theme);
   }, [theme])
 
-  const fetchBlogs = async (sort = 'desc') => {
+  const fetchBlogs = async (sort = 'createdAt', order = 'desc') => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch(`/api/blogs/?sort=${sort}`);
+      const response = await fetch(`/api/blogs/?sort=${sort}&order=${order}`);
       if (!response.ok) {
         throw new Error('Server response not ok. ');
       }
@@ -58,8 +59,8 @@ function App() {
 
   // Update list sorted on server side when sort order changes
   useEffect(() => {
-    fetchBlogs(sortBy);
-  }, [sortBy]);
+    fetchBlogs(sortBy, sortOrder);
+  }, [sortBy, sortOrder]);
 
   const handleCreateBlog = async (form) => {
     try {
@@ -109,10 +110,21 @@ function App() {
       {error && <p style={{color: 'red'}}>{error}</p>}
       <BlogForm onCreate={handleCreateBlog} />
       <h2>Generated Blogs</h2>
-      <select onChange={(e) => setSortBy(e.target.value)}>
-        <option value="desc">Newest First</option>
-        <option value="asc">Oldest First</option>
-      </select>
+      <label>
+        Sort By:
+        <select className="dropdown" onChange={(e) => setSortBy(e.target.value)}>
+          <option value="createdAt">Create Date</option>
+          <option value="author">Author</option>
+          <option value="title">Title</option>
+        </select>
+      </label>
+      <label>
+        Sort Order:
+        <select className="dropdown" onChange={(e) => setSortOrder(e.target.value)}>
+          <option value="desc">Descending</option>
+          <option value="asc">Ascending</option>
+        </select>
+      </label>
       { loading ? (
         <>
           <div className="loading-indicator"></div>
