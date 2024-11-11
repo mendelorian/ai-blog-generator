@@ -173,7 +173,7 @@ button {
   margin: auto;
 }
 
-.pagination {
+.page-controls-bottom {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -214,7 +214,7 @@ button {
   color: var(--text-color #555);
 }
 
-.page-controls {
+.page-controls-top {
   display: flex;
   gap: 8px;
   align-items: center;

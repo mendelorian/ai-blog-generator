@@ -1,77 +1,93 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import BlogForm from './components/BlogForm.jsx';
 import BlogList from './components/BlogList.jsx';
 import { FaSun, FaMoon } from 'react-icons/fa';
 import { debounce } from 'lodash';
 
+// Constants
+const THEME_OPTIONS = {
+  LIGHT: 'light',
+  DARK: 'dark',
+  SYSTEM: 'system',
+};
+
+const SORT_OPTIONS = {
+  CREATED_AT: 'createdAt',
+  AUTHOR: 'author',
+  TITLE: 'title',
+};
+
+const SORT_ORDERS = {
+  ASC: 'asc',
+  DESC: 'desc',
+};
+
 function App() {
+  // State management
   const [blogs, setBlogs] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [theme, setTheme] = useState(() => {
-    const savedTheme = localStorage.getItem('theme');
-    return savedTheme || 'system';
-  })
-  const [sortBy, setSortBy] = useState('desc');
-  const [sortOrder, setSortOrder] = useState('createdAt');
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || THEME_OPTIONS.SYSTEM);
+  const [sortBy, setSortBy] = useState(SORT_OPTIONS.CREATED_AT);
+  const [sortOrder, setSortOrder] = useState(SORT_ORDERS.DESC);
   const [authorFilter, setAuthorFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [systemThemeDisplay, setSystemThemeDisplay] = useState('Use System Theme');
 
-  const getSystemTheme = () => {
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  }
+  // Utility functions
+  const getSystemTheme = useCallback(() =>
+    window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? THEME_OPTIONS.DARK
+      : THEME_OPTIONS.LIGHT
+    , []);
 
-  // Set initial theme based on system preference
-  useEffect(() => {
-    if (theme === 'system') {
-      const systemTheme = getSystemTheme();
-      setTheme(systemTheme);
-    }
+  const updateRootTheme = useCallback((newTheme) => {
+    const root = document.documentElement;
+    root.classList.remove(THEME_OPTIONS.LIGHT, THEME_OPTIONS.DARK);
+    root.classList.add(newTheme);
   }, []);
 
-  // Listen for system theme changes if 'system' theme is selected
+  // Theme management
+  // Set initial theme based on system preference
+  useEffect(() => {
+    if (theme === THEME_OPTIONS.SYSTEM) {
+      updateRootTheme(getSystemTheme());
+    } else {
+      updateRootTheme(theme);
+      localStorage.setItem('theme', theme);
+    }
+  }, [theme, getSystemTheme, updateRootTheme]);
+
+  // System theme change listener
   // This will allow the manual theme change button to change accordingly
   useEffect(() => {
-    if (theme === 'system') {
+    if (theme === THEME_OPTIONS.SYSTEM) {
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark');
-      const handleThemeChange = () => {
-        setTheme(mediaQuery.matches ? 'dark' : 'light');
-      };
+      const handleThemeChange = () => updateRootTheme(getSystemTheme());
 
       mediaQuery.addEventListener('change', handleThemeChange);
       return () => mediaQuery.removeEventListener('change', handleThemeChange);
     }
-  })
+  }, [theme, getSystemTheme, updateRootTheme]);
 
-  // Get dark or light theme from local storage if it exists
-  useEffect(() => {
-    const root = document.documentElement;
-    // Remove/reset theme classes
-    root.classList.remove('light', 'dark');
+  // API Call
+  const fetchBlogs = useCallback(async (options = {}) => {
+    const {
+      sort = sortBy,
+      order = sortOrder,
+      author = authorFilter,
+      page = currentPage,
+    } = options;
 
-    // If the theme is selected, set the theme class
-    if (theme === 'light') {
-      root.classList.add('light');
-    } else if (theme === 'dark') {
-      root.classList.add('dark');
-    }
-
-    // If theme is not set, 'system' then will be used
-    // Save the user's preference in localStorage so it persists across sessions
-    localStorage.setItem('theme', theme);
-  }, [theme])
-
-  const fetchBlogs = async (sort = 'createdAt', order = 'desc', author = '', page = 1) => {
     setLoading(true);
     setError(null);
 
     try {
       const queryParams = new URLSearchParams({
-        sort: sortBy,
-        order: sortOrder,
-        author: authorFilter,
+        sort,
+        order,
+        author,
         page: page.toString(),
       }).toString();
 
@@ -90,28 +106,34 @@ function App() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [sortBy, sortOrder, authorFilter, currentPage]);
 
-  // Get the initial list of blogs from the DB
+  // Initial fetch
   useEffect(() => {
     fetchBlogs();
   }, []);
 
-  // debounce fetching of blogs to reduce network calls
-  const debouncedFetchBlogs = debounce(() => {
-    fetchBlogs(sortBy, sortOrder, authorFilter, currentPage);
-  }, 300);
+  // Debounce author filter fetch to reduce network calls
+  const debouncedFetchBlogs = useMemo(
+    () => debounce((options) => {
+      fetchBlogs(options)
+    }, 300),
+    [fetchBlogs]
+  );
 
-  // Update list sorted on server side when sorting or filtering
   useEffect(() => {
-    if (authorFilter) {
-      debouncedFetchBlogs();
-    } else {
-      fetchBlogs(sortBy, sortOrder, authorFilter, currentPage);
+    if (authorFilter !== '') {
+      debouncedFetchBlogs({author: authorFilter, page: 1});
+      return () => debouncedFetchBlogs.cancel();
     }
-    return () => debouncedFetchBlogs.cancel();
-  }, [sortBy, sortOrder, authorFilter, currentPage]);
+  }, [authorFilter, debouncedFetchBlogs]);
 
+  // Sort and page changes
+  useEffect(() => {
+    fetchBlogs();
+  }, [sortBy, sortOrder, currentPage, fetchBlogs]);
+
+  // Event handlers
   const handleCreateBlog = async (form) => {
     try {
       const response = await fetch ('/api/blogs', {
@@ -133,36 +155,27 @@ function App() {
   }
 
   const toggleTheme = () => {
-    setTheme((prevTheme) => {
-      if (prevTheme === 'light') return 'dark';
-      // if (prevTheme === 'dark') return 'system';
-      return 'light';
-    })
+    setTheme((prevTheme) =>
+      prevTheme === THEME_OPTIONS.LIGHT
+      ? THEME_OPTIONS.DARK
+      : THEME_OPTIONS.LIGHT
+    );
   }
 
-  const toggleSystemTheme = () => {
-    const systemTheme = getSystemTheme();
-    setTheme(systemTheme);
+  const setSystemTheme = () => {
+    setTheme(THEME_OPTIONS.SYSTEM);
     setSystemThemeDisplay('Theme is now set to match your system preferences');
+
     const button = document.querySelector('.system-theme-button');
-    button.style.backgroundColor = '#007bff';
-    button.style.transition = 'background-color 0.75s ease';
-    setTimeout(() => {
-      button.style.backgroundColor = 'transparent';
-      setSystemThemeDisplay('Use System Theme');
-    }, 2000);
-  }
+    if (button) {
+      button.style.backgroundColor = '#007bff';
+      button.style.transition = 'background-color 0.75s ease';
 
-  const getThemeIcon = () => {
-    if (theme === 'light') return <FaMoon />;
-    // if (theme === 'dark') return <FaDesktop />;
-    return <FaSun />;
-  }
-
-  const setThemeTitle = () => {
-    if (theme === 'light') return 'Switch to Dark Mode';
-    // if (theme === 'dark') return 'Use System Theme';
-    return 'Switch to Light Mode';
+      setTimeout(() => {
+        button.style.backgroundColor = 'transparent';
+        setSystemThemeDisplay('Use System Theme');
+      }, 2000);
+    }
   }
 
   const handlePageChange = (page) => {
@@ -172,72 +185,84 @@ function App() {
   }
 
   const handleFilterChange = (e) => {
-    setAuthorFilter(() => e.target.value);
+    setAuthorFilter(e.target.value);
     setCurrentPage(1);
   }
+
+  // UI Components
+  const ThemeIcon = () => {
+    return theme === THEME_OPTIONS.LIGHT ? <FaMoon /> : <FaSun />;
+  }
+
+  const themeTitle = () => {
+    return theme === THEME_OPTIONS.LIGHT ? 'Switch to Dark Mode' : 'Switch to Light Mode';
+  }
+
+  const PaginationControls = ({ position = 'top' }) => (
+    <div className={`page-controls-${position}`}>
+      {currentPage > 1 && (
+        <button
+          className="page-button"
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={loading || currentPage <= 1}
+        >
+          Previous
+        </button>
+      )}
+      <div className="page-info">
+        Page {currentPage} / {totalPages}
+      </div>
+      {currentPage < totalPages && (
+        <button
+          className="page-button"
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={loading || currentPage >= totalPages}
+          >
+          Next
+        </button>
+      )}
+    </div>
+  );
 
   return (
     <div>
       <h1>AI Blog Generator</h1>
-      <button className="system-theme-button" onClick={toggleSystemTheme}>
+      <button className="system-theme-button" onClick={setSystemTheme}>
         {systemThemeDisplay}
       </button>
       <button
         className="theme-switcher"
         onClick={toggleTheme}
-        title={setThemeTitle()}
+        title={themeTitle()}
         aria-label="Toggle color theme"
         aria-live="polite"
       >
-        {getThemeIcon()}
+        <ThemeIcon />
       </button>
+
       {error && <p style={{color: 'red'}}>{error}</p>}
+
       <BlogForm onCreate={handleCreateBlog} />
+
       <div className="header-container">
         <h2>Generated Blogs</h2>
-        <div className="page-controls">
-          {
-            currentPage > 1 ?
-            <button
-              className="page-button"
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={loading || currentPage <= 1}
-              >
-              Previous Page
-            </button> :
-            <></>
-          }
-          <div className="page-info">
-            Page {currentPage} / {totalPages}
-          </div>
-          {
-            totalPages > 1 ?
-            <button
-              className="page-button"
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={loading || currentPage >= totalPages}
-              >
-              Next Page
-            </button> :
-            <></>
-          }
-        </div>
+        <PaginationControls position="top" />
 
       </div>
       <div className="sort-and-filter">
         <label>
           Sort By:
           <select className="dropdown" onChange={(e) => setSortBy(e.target.value)}>
-            <option value="createdAt">Create Date</option>
-            <option value="author">Author</option>
-            <option value="title">Title</option>
+            <option value={SORT_OPTIONS.CREATED_AT}>Create Date</option>
+            <option value={SORT_OPTIONS.AUTHOR}>Author</option>
+            <option value={SORT_OPTIONS.TITLE}>Title</option>
           </select>
         </label>
         <label>
           Sort Order:
           <select className="dropdown" onChange={(e) => setSortOrder(e.target.value)}>
-            <option value="desc">Descending</option>
-            <option value="asc">Ascending</option>
+            <option value={SORT_ORDERS.DESC}>Descending</option>
+            <option value={SORT_ORDERS.ASC}>Ascending</option>
           </select>
         </label>
         <label>
@@ -259,25 +284,7 @@ function App() {
         ) : (
           <>
             <BlogList blogs={blogs} />
-            <div className="pagination">
-              {
-                currentPage > 1 ?
-                <button className="page-button" onClick={() => handlePageChange(currentPage - 1)} disabled={loading || currentPage <= 1}>
-                  Previous
-                </button> :
-                <></>
-              }
-              <span>
-                Page {currentPage} of {totalPages}
-              </span>
-              {
-                totalPages > 1 ?
-                <button className="page-button" onClick={() => handlePageChange(currentPage + 1)} disabled={loading || currentPage >= totalPages}>
-                  Next
-                </button> :
-                <></>
-              }
-            </div>
+            <PaginationControls position="bottom" />
           </>
         )}
 
