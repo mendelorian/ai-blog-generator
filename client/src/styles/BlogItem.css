@@ -1,0 +1,79 @@
+.blog-item {
+  border-bottom: 1px solid var(--divider-color);
+  padding: 1em 0;
+}
+
+.blog-title {
+  margin: 0 0 0.5em;
+}
+
+.blog-metadata {
+  font-size: 0.9em;
+  color: var(--metadata-color);
+  margin-bottom: 1em;
+}
+
+.blog-content {
+  position: relative;
+  background-color: var(--content-background);
+  padding: 1.5em;
+  border-radius: 8px;
+}
+
+.copy-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 4px 8px;
+  font-size: 0.84rem;
+  border: none;
+  background-color: #4f4f4f;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  &:focus {
+    outline: none;
+  }
+}
+
+.copy-button:hover {
+  background-color: var(--button-hover-background);
+}
+
+/* System color scheme */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --divider-color: #444444;
+    --metadata-color: #bbbbbb;
+    --content-background: #333333;
+    --button-background: #888;
+    --button-hover-background: #777;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --divider-color: #f1f1f1;
+    --metadata-color: #666666;
+    --content-background: #f9f9f9;
+    --button-background: #646cff;
+    --button-hover-background: #535bf2;
+  }
+}
+
+/* For manually set color scheme */
+.light {
+  --divider-color: #e0e0e0;
+  --metadata-color: #666666;
+  --content-background: #f9f9f9;
+  --button-background: #646cff;
+  --button-hover-background: #535bf2;
+}
+
+.dark {
+  --divider-color: #444444;
+  --metadata-color: #bbbbbb;
+  --content-background: #333333;
+  --button-background: #888;
+  --button-hover-background: #777;
+}

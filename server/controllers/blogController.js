@@ -4,7 +4,7 @@ import axios from 'axios';
 
 export const createBlog = async (req, res) => {
   const { topic, author } = req.body;
-  console.log('Request Body:', req.body);
+
   // call the openAI API
   try {
     const response = await axios.post('https://api.openai.com/v1/chat/completions', {
@@ -15,7 +15,7 @@ export const createBlog = async (req, res) => {
             'content': [
               {
                 'type': 'text',
-                'text': 'Be concise and to the point but insightful. Assume user already knows the basics',
+                'text': 'Be concise, to the point, and insightful. Assume user already knows the basics',
               }
             ]
           },
@@ -24,7 +24,7 @@ export const createBlog = async (req, res) => {
             'content': [
               {
                 'type': 'text',
-                'text': `Write a very short blog about ${topic}. Limit to 300 tokens`
+                'text': `Write a short blog about ${topic}. Limit to 300 tokens`
               }
             ]
           },
@@ -63,15 +63,39 @@ export const createBlog = async (req, res) => {
 
 export const getAllBlogs = async (req, res) => {
   try {
-    const { sort = 'createdAt', order = 'desc' } = req.query;
+    const { sort = 'createdAt', order = 'desc', author, page = 1, limit = 5 } = req.query;
 
     // validate sort fields to prevent injection attacks
     const sortFields = ['createdAt', 'author', 'title'];
     const sortBy = sortFields.includes(sort) ? sort : 'createdAt';
     const sortOrder = order === 'asc' ? 1 : -1;
 
-    const blogs = await Blog.find().sort({ [sortBy]: sortOrder });
-    res.status(200).json(blogs);
+    // Pagination values
+    const pageNumber = parseInt(page) > 0 ? parseInt(page) : 1;
+    const limitValue = parseInt(limit) > 0 ? parseInt(limit) : 5;
+    const skip = (pageNumber - 1) * limitValue;
+
+    // Filtering values
+    const filter = {};
+    if (author) {
+      filter.author = new RegExp(author, 'i');
+    }
+
+    // Fetch blogs with filtering, sorting, and pagination
+    const blogs = await Blog.find(filter)
+      .sort({ [sortBy]: sortOrder })
+      .skip(skip)
+      .limit(limitValue);
+
+    // Fetch total count of blogs for pagination display
+    const blogCount = await Blog.countDocuments(filter);
+    const totalPages = Math.ceil(blogCount / limitValue);
+
+    res.status(200).json({
+      blogs,
+      currentPage: pageNumber,
+      totalPages: totalPages > 0 ? totalPages : 1,
+    });
   } catch (err) {
     res.status(500).json({message: 'Error fetching blogs', err});
   }

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useRef } from 'react';
 import PropTypes from 'prop-types';
 import '../styles/BlogForm.css';
 
@@ -10,6 +11,7 @@ export default function BlogForm ({ onCreate }) {
   const [form, setForm] = useState(INITIAL_FORM_STATE);
   const [loading, setLoading] = useState(false);
   const [loadingDots, setLoadingDots] = useState('');
+  const inputRef = useRef(null);
 
   // Memoize form reset
   const resetForm = useCallback(() => {
@@ -55,6 +57,11 @@ export default function BlogForm ({ onCreate }) {
     return loading ? `Generating${loadingDots}` : 'Generate Blog';
   }, [loading, loadingDots]);
 
+  // Focus on the first input field when page is loaded
+  useEffect(() => {
+    inputRef.current.focus();
+  }, []);
+
   return (
     <form onSubmit={handleSubmit} className="form">
       <input
@@ -65,6 +72,7 @@ export default function BlogForm ({ onCreate }) {
         required
         disabled={loading}
         className="topic-input"
+        ref={inputRef}
       />
       <input
         type="text"
