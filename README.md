@@ -28,8 +28,6 @@ This AI Blog Generator app leverages OpenAI’s API to create short, customizabl
 4. **Paginate** through large lists of entries.
 5. **Copy** the raw Markdown content of each post with a click of a button.
 
-It’s intended to demonstrate a full-stack approach: a **React** frontend with **Express** and **MongoDB** on the backend. The project is an excellent example of modern web development using React Hooks and best practices for user experience and code organization.
-
 ---
 
 ## Features
@@ -56,7 +54,6 @@ It’s intended to demonstrate a full-stack approach: a **React** frontend with 
 **Client (Frontend)**
 - [React](https://reactjs.org/) (with Hooks)
 - [React Icons](https://react-icons.github.io/react-icons/) for UI icons
-- [React Spinners](https://www.npmjs.com/package/react-spinners) (optional, for loading indicators)
 
 **Server (Backend)**
 - [Node.js](https://nodejs.org/)
@@ -65,7 +62,7 @@ It’s intended to demonstrate a full-stack approach: a **React** frontend with 
 - [OpenAI API](https://platform.openai.com/docs/introduction) (for AI-driven content)
 
 **Database**
-- [MongoDB](https://www.mongodb.com/) (local or hosted on MongoDB Atlas)
+- [MongoDB](https://www.mongodb.com/) (local)
 
 ---
 
@@ -73,7 +70,7 @@ It’s intended to demonstrate a full-stack approach: a **React** frontend with 
 
 ### Prerequisites
 
-- **Node.js** (v14+ recommended)
+- **Node.js**
 - **npm** or **yarn**
 - A **MongoDB** instance (local or hosted)
 - A valid **OpenAI API key**
@@ -90,10 +87,11 @@ cd ai-blog-generator
 ```
 3. **Install** dependencies for both server and client:
 ```bash
-# In the root directory
+# npm install in the server directory
+cd server
 npm install
 
-# If there's a separate client folder
+# npm install in the client directory
 cd client
 npm install
 ```
@@ -103,15 +101,16 @@ npm install
 ```bash
 # In the server folder
 cd server
-npm run dev
+npm run start
 ```
-3. **Start the React client** (if separate):
+3. **Start the React client**:
 ```bash
 # In the client folder
 cd client
-npm start
+npm run dev
 ```
-4. Open http://localhost:3000 in your browser. You should see the AI Blog Generator app running.
+4. **Start your MongoDB** after setting your environment variables
+5. Open http://localhost:3000 (or with your chosen port) in your browser. You should see the AI Blog Generator app running.
 
 ---
 
@@ -174,41 +173,10 @@ PORT=5000
 |-------------------------|--------|-----------------------------------------------------------------------------------|
 | `/api/blogs`           | GET    | Retrieves blogs, supports query params: `sort`, `order`, `author`, `page`, `limit` |
 | `/api/blogs`           | POST   | Creates a new blog using AI-generated content                                      |
-| `/api/blogs/:id`       | GET    | *(Optional)* Retrieves a single blog by ID                                         |
-| `/api/blogs/:id`       | PUT    | *(Optional)* Updates a blog                                                        |
-| `/api/blogs/:id`       | DELETE | *(Optional)* Deletes a blog                                                        |
+| `/api/blogs/:id`       | GET    | *(Not yet implemented)* Retrieves a single blog by ID                                         |
+| `/api/blogs/:id`       | PUT    | *(Not yet implemented)* Updates a blog                                                        |
+| `/api/blogs/:id`       | DELETE | *(Not yet implemented)* Deletes a blog                                                        |
 
-
----
-
-## Project Structure
-A typical structure might look like this:
-
-```go
-ai-blog-generator/
-├── client/
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── BlogForm.jsx
-│   │   │   ├── BlogList.jsx
-│   │   │   └── BlogItem.jsx
-│   │   ├── App.jsx
-│   │   ├── index.js
-│   │   └── styles/...
-│   └── package.json
-├── server/
-│   ├── controllers/
-│   │   └── blogController.js
-│   ├── models/
-│   │   └── Blog.js
-│   ├── routes/
-│   │   └── blogRoutes.js
-│   ├── index.js
-│   └── package.json
-├── .env
-├── README.md
-└── package.json
-```
 
 ---
 
